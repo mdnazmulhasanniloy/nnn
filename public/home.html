@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="access_token"></div>
+
+    <button style="margin: 5px" onclick="setPassKey()">generate passkey</button>
+  </body>
+  <script src="https://unpkg.com/@simplewebauthn/browser/dist/bundle/index.umd.min.js"></script>
+  <script>
+    const accessToken = localStorage.getItem('accessToken');
+    console.log(accessToken);
+    if (!accessToken) {
+      window.location.href = 'login.html';
+    }
+    document.getElementById('access_token').innerHTML =
+      `<button onclick="logout()">Log out</button>`;
+
+    const setPassKey = async () => {
+      try {
+        // Check if the browser supports WebAuthn
+        if (!window.PublicKeyCredential) {
+          console.error('WebAuthn is not supported in this browser.');
+          alert(
+            'Your browser does not support WebAuthn. Please update your browser.',
+          );
+          return;
+        }
+
+        // Fetch registration challenge options
+        const response = await fetch('/register-challenge', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          const { options } = data.data; // Extract registration options
+
+          try {
+            // Start the WebAuthn registration process
+            const authResult =
+              await SimpleWebAuthnBrowser.startRegistration(options);
+            console.log('Registration successful:', authResult);
+          } catch (error) {
+            console.error('Error during WebAuthn registration:', error);
+            alert(
+              'An error occurred during the registration process. Please try again.',
+            );
+          }
+        } else {
+          console.error('Error fetching registration challenge:', data);
+        }
+      } catch (error) {
+        console.error('Network or server error:', error);
+        alert('Unable to process the request. Please try again later.');
+      }
+    };
+
+    // const setPassKey = async () => {
+    //   const response = await fetch('/register-challenge', {
+    //     method: 'POST',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //       Authorization: `Bearer ${accessToken}`,
+    //     },
+    //     //   body: JSON.stringify({
+    //     //     // Passkey request data
+    //     //   }),
+    //   });
+    //   const data = await response.json();
+    //   if (data.success) {
+    //     const { options } = data?.data;
+    //     const authResult =
+    //       await SimpleWebAuthnBrowser?.startRegistration(options);
+    //     console.log(authResult);
+    //   }
+    //   console.log(data);
+    // };
+
+    const logout = async () => {
+      localStorage.removeItem('accessToken');
+      window.location.href = 'login.html';
+    };
+  </script>
+</html>

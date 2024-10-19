@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple Registration Form</title>
+    <link rel="stylesheet" href="./style/register.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h2>Register</h2>
+      <div class="" style="padding: 20px; color: red" id="error-msg"></div>
+      <!-- Corrected the onsubmit event to call the 'register' function properly -->
+      <form method="post" onsubmit="register(event)">
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name" required />
+
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required />
+
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required />
+
+        <button type="submit">Register</button>
+      </form>
+      <a style="margin: 20px" href="http://115.127.156.14:1000/view/login.html">
+        <div class="">Login now</div>
+      </a>
+    </div>
+  </body>
+  <script>
+    // Fixed function name 'register' instead of 'regester'
+    async function register(event) {
+      event.preventDefault(); // Prevent form from submitting the traditional way
+      console.log('Form submitted');
+
+      // Getting the form data
+      const formData = new FormData(event.target);
+      const name = formData.get('name');
+      const email = formData.get('email');
+      const password = formData.get('password');
+      console.log(name, email, password);
+      try {
+        // Sending the POST request to the API endpoint
+        const res = await fetch('api/v1/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ name, email, password }), // Converting data to JSON
+        });
+
+        const data = await res.json(); // Parsing the JSON response
+
+        // Checking for success response and handle it
+        if (data?.success) {
+          document.getElementById('error-msg').innerHTML =
+            ` <p style="color:green;"> ${data?.message}</p>`;
+          console.log('Registration successful:', data);
+        } else {
+          document.getElementById('error-msg').innerHTML =
+            ` <p> ${data?.message}</p>`;
+        }
+      } catch (error) {
+        document.getElementById('error-msg').innerHTML =
+          `<p> ${error?.message}</p>`;
+
+        // Handling any network errors
+        console.error('Network error:', error);
+      }
+    }
+  </script>
+</html>
